@@ -1,351 +1,728 @@
 import {
-  FlatList,
-  StatusBar,
-  StyleSheet,
-  Text,
   View,
-  Image,
+  Text,
+  StyleSheet,
   ScrollView,
+  TouchableOpacity,
   TextInput,
-} from 'react-native';
-import React from 'react';
-import {SafeAreaView} from 'react-native-safe-area-context';
-import {TouchableOpacity} from 'react-native-gesture-handler';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import Feather from 'react-native-vector-icons/Feather';
-import Colors from '../../components/Colors';
-import Data from '../../assets/dummyjson/cartProduct.json';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+  Alert,
+  StatusBar,
+  SafeAreaView,
+} from "react-native";
+import React, { useEffect, useState } from "react";
+import Colors from "../../components/Colors";
+import { useNavigation } from "@react-navigation/native";
+import { ADD_ADDRESS } from "../../API/API_service";
+import Loading from "../../components/General/loading";
+import InternalHeader from "../../components/header/InternalHeader";
 import {
-  responsiveFontSize,
-  responsivePadding,
-} from '../../components/Responsive';
-import {useNavigation} from '@react-navigation/native';
+  moderateScale,
+  moderateScaleVertical,
+  scale,
+  textScale,
+} from "../../utils/ResponsiveSize";
+import FontFamily from "../../utils/FontFamily";
+import FastImage from "react-native-fast-image";
+import { showMessage } from "react-native-flash-message";
+import StateData from "../../assets/dummyjson/State.json";
+import RNPickerSelect from "react-native-picker-select";
+import AntDesign from "react-native-vector-icons/AntDesign";
 
-const ChekoutScreen = () => {
-  const staticImageURL = 'https://picsum.photos/300';
+export default function ChekoutScreen({ route }) {
+  const { cartProducts, user, discountedAmount } = route.params;
   const navigation = useNavigation();
-  const renderItem = ({item}) => {
-    return (
-      <View style={styles.cartHolder}>
-        <View style={styles.cartViewHolder}>
-          {/* details View */}
-          <View style={styles.detailsviewHolder}>
-            <Text style={styles.name}>{item.name}</Text>
-            <View style={{flexDirection: 'row'}}>
-              <AntDesign
-                name="star"
-                size={responsiveFontSize(20)}
-                color={Colors.black}
-              />
-              <Text
-                style={
-                  styles.rating
-                }>{` ${item.rating} (${item.reviewCount} reviews)`}</Text>
-            </View>
+  const [loading, setLoading] = useState(false);
+  const [fullNameError, setFullNameError] = useState(null);
+  const [mobileError, setMobileError] = useState(null);
+  const [gstInError, setGstInError] = useState(null);
+  const [addressError, setAddressError] = useState(null);
+  const [pinCodeError, setPinCodeError] = useState(null);
+  const [landMarkError, setLandmarkError] = useState(null);
+  const [townError, setTownError] = useState(null);
+  const [emailError, setEmailError] = useState(null);
+  const [stateError, setStateError] = useState(null);
 
-            <Text style={styles.price}>{`Rs.${item.price}`}</Text>
-          </View>
+  const [fullName, setFullName] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [gst, setGst] = useState("");
+  const [pincode, setPincode] = useState("");
+  const [landmark, setLandmark] = useState("");
+  // const [selectedSate, setSelectedState] = useState("");
+  // const [state, setState] = useState(StateData);
+  // const [showStateDropdown, setShowStateDropdown] = useState(false);
+  // const [searchStateText, setSearchStateText] = useState("");
+  const [selectedState, setSelectedState] = useState("");
+  const [state, setState] = useState(StateData); // Set initial state to StateData
+  const [showStateDropdown, setShowStateDropdown] = useState(false);
+  const [searchStateText, setSearchStateText] = useState("");
 
-          {/* Product Images */}
-          <View style={styles.cartImageHolder}>
-            <Image
-              source={{uri: staticImageURL}}
-              resizeMode="cover"
-              style={styles.image}
-            />
-          </View>
-        </View>
-      </View>
-    );
+  const validateGSTRegex =
+    /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[0-9]{1}[A-Z0-9]{1}[A-Z0-9]{1}$/;
+  const placeholderImage = "https://prempackaging.com/img/logo.png";
+
+  const handleSearchChange = (text) => {
+    setSearchStateText(text); // Update search text
+
+    if (text === "") {
+      // If search text is empty, show the full state list
+      setState(StateData);
+    } else {
+      // Filter states based on the search text (case-insensitive)
+      const filteredStates = StateData.filter((stateName) =>
+        stateName.name.toLowerCase().includes(text.toLowerCase())
+      );
+      setState(filteredStates);
+    }
   };
-  return (
-    <SafeAreaView style={styles.main}>
-      <StatusBar barStyle={'dark-content'} backgroundColor={Colors.white} />
-      {/* Header View */}
-      <View style={styles.headerView}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons
-            name="arrow-back"
-            size={responsiveFontSize(35)}
-            color={Colors.black}
-          />
-        </TouchableOpacity>
-        <View>
-          <Text style={styles.headerText}>Checkout</Text>
-        </View>
-        <TouchableOpacity>
-          <Ionicons
-            name="heart-outline"
-            size={responsiveFontSize(35)}
-            color={Colors.black}
-          />
-        </TouchableOpacity>
-      </View>
-      {/* Location */}
-      <TouchableOpacity style={styles.locationHolder}>
-        <View style={styles.locationView}>
-          <View style={{width: '10%'}}>
-            <Ionicons
-              name="location-outline"
-              size={responsiveFontSize(30)}
-              color={Colors.text_grey}
-            />
-          </View>
-          <View style={{width: '70%'}}>
-            <Text style={styles.text}>Bairiya Patna</Text>
-            <Text style={{color: Colors.text_grey}}>
-              Village - Bairiya,Near by Durga Mandir Patna Bihar 800007
-            </Text>
-          </View>
-          <View style={{width: '10%'}}>
-            <Feather
-              name="chevron-right"
-              size={responsiveFontSize(30)}
-              color={Colors.text_grey}
-            />
-          </View>
-        </View>
-      </TouchableOpacity>
-      {/* Your Order Section */}
-      <ScrollView contentContainerStyle={{flexGrow: 1}}>
-        <View style={{width: '95%', alignSelf: 'center'}}>
-          <Text style={styles.text}>Your Order</Text>
-          {Data?.recentlyVisitedProducts.map(item => (
-            <View style={styles.cartHolder} key={item.id}>
-              <View style={styles.cartViewHolder}>
-                {/* details View */}
-                <View style={styles.detailsviewHolder}>
-                  <Text style={styles.name}>{item.name}</Text>
-                  <View style={{flexDirection: 'row'}}>
-                    <AntDesign
-                      name="star"
-                      size={responsiveFontSize(20)}
-                      color={Colors.black}
-                    />
-                    <Text
-                      style={
-                        styles.rating
-                      }>{` ${item.rating} (${item.reviewCount} reviews)`}</Text>
-                  </View>
-                  <Text style={styles.price}>{`Rs.${item.price}`}</Text>
-                </View>
 
-                {/* Product Images */}
-                <View style={styles.cartImageHolder}>
-                  <Image
-                    source={{uri: staticImageURL}}
-                    resizeMode="cover"
-                    style={styles.image}
-                  />
-                </View>
-              </View>
+  function getCartTotal() {
+    return cartProducts.reduce(
+      (total, item) => total + item.price * item.quantity,
+      0
+    );
+  }
+
+  function calculateAmounts() {
+    let totalAmount12 = 0;
+    let totalAmount18 = 0;
+
+    cartProducts.forEach((item) => {
+      const itemTotal = item.price * item.quantity;
+      if (item.category === "6557deab301ec4f2f4266131") {
+        totalAmount12 += itemTotal;
+      } else {
+        totalAmount18 += itemTotal;
+      }
+    });
+
+    const gst12Charges = totalAmount12 * 0.12;
+    const gst18Charges = totalAmount18 * 0.18;
+
+    const totalGST = gst12Charges + gst18Charges;
+
+    return {
+      totalAmount12,
+      totalAmount18,
+      totalGST,
+    };
+  }
+
+  const { totalAmount12, totalAmount18, totalGST } = calculateAmounts();
+
+  const validatePhone = (phone) => {
+    return phone.length === 10 && /^\d+$/.test(phone);
+  };
+
+  const validateEmail = (email) => {
+    const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$/;
+    if (!regex.test(email)) {
+      return false;
+    }
+    // Additional check to avoid consecutive dots in domain part
+    const domainPart = email.split("@")[1];
+    if (domainPart.includes("..")) {
+      return false;
+    }
+    return true;
+  };
+
+  const handleAddAddress = async () => {
+    if (
+      !fullName ||
+      !address ||
+      !city ||
+      !phone ||
+      !email ||
+      !gst ||
+      !pincode ||
+      !landmark ||
+      !selectedState
+    ) {
+      setFullNameError(!fullName ? "Please enter the full name" : "");
+      setMobileError(!phone ? "Please enter the mobile number" : "");
+      setGstInError(!gst ? "Please enter the GSTIN number" : "");
+      setAddressError(!address ? "Please enter the address" : "");
+      setPinCodeError(!pincode ? "Please enter the PinCode" : "");
+      setLandmarkError(!landmark ? "Please enter the landmark" : "");
+      setTownError(!city ? "Please enter the town/city" : "");
+      setEmailError(!email ? "Please enter the email id" : "");
+      setStateError(!selectedState ? "Please enter the state name" : "");
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setEmailError("Please enter a valid email address");
+      return;
+    }
+
+    if (!validatePhone(phone)) {
+      setMobileError("Please enter a valid mobile number");
+      return;
+    }
+    if (!validateGSTRegex.test(gst)) {
+      setGstInError("Please enter the valid GSTIN number");
+      return;
+    }
+    try {
+      setLoading(true);
+      const data = {
+        id: user?._id,
+        newAddress: {
+          name: fullName,
+          mobile: phone,
+          gstin: gst,
+          address: address,
+          pincode: pincode,
+          landmark: landmark,
+          town: city,
+          state: selectedState,
+          email: email,
+        },
+      };
+      const temp_address = [
+        {
+          name: fullName,
+          mobile: phone,
+          gstin: gst,
+          address,
+          pincode,
+          landmark,
+          town: city,
+          email,
+          state:selectedState,
+        },
+      ];
+      console.log(data, "Line 165");
+      const response = await ADD_ADDRESS(data);
+      if (response?.success === true) {
+        showMessage({
+          message: "Address added Successfully",
+          type: "success",
+          color: Colors.white,
+          backgroundColor: Colors.green,
+        });
+        setLoading(false);
+        navigation.replace("Show Address", {
+          contact_address: temp_address,
+          cartProducts,
+          user,
+          discountedAmount,
+        });
+      }
+    } catch (e) {
+      Alert.alert("Error", "Something went wrong");
+      setLoading(false);
+    }
+  };
+
+  const handleChangeAddress = async () => {
+    console.log("Clicked on the change Address Button");
+    navigation.replace("Shipping Address", {
+      routeName: "Billing Address",
+      cartProducts: cartProducts,
+      user: user,
+      discountedAmount: discountedAmount,
+    });
+  };
+
+  const handleStateSelection = (state) => {
+    setSelectedState(state.name);
+    setShowStateDropdown(false);
+    setSearchStateText("");
+  };
+
+  return (
+    <View style={{ flex: 1, backgroundColor: Colors.back }}>
+      <StatusBar barStyle={"dark-content"} backgroundColor={Colors.white} />
+      <SafeAreaView style={{ backgroundColor: Colors.white }} />
+      <InternalHeader title={"Billing Details"} />
+      <ScrollView style={styles.container}>
+        {/* main content */}
+        <View style={styles.content}>
+          <View style={styles.changeHolder}>
+            <Text style={styles.billingHeading}>Your Shipping Address</Text>
+            <TouchableOpacity
+              style={{ width: "30%", alignItems: "center" }}
+              onPress={handleChangeAddress}
+            >
+              <Text style={styles.changeText}>Change</Text>
+            </TouchableOpacity>
+          </View>
+          {/* form inputs */}
+          <View style={styles.formHolder}>
+            <View>
+              <Text style={styles.formTitle}>
+                Full Name
+                <Text style={{ color: "red" }}>*</Text>
+              </Text>
+              <TextInput
+                placeholder="Full Name"
+                onChangeText={(value) => {
+                  setFullName(value);
+                  if (value) setFullNameError("");
+                }}
+                style={styles.formInput}
+                placeholderTextColor={Colors.border_color}
+              />
+              {fullNameError && (
+                <Text style={styles.errorText}>{fullNameError}</Text>
+              )}
             </View>
-          ))}
-        </View>
-        {/* Calculate Carges */}
-        <View style={styles.locationHolder}>
-          <Text style={styles.text1}>Calculate Fright Charges</Text>
-          <View style={styles.view1}>
-            <View style={{width: '45%'}}>
+
+            <View>
+              <Text style={styles.formTitle}>
+                Mobile
+                <Text style={{ color: "red" }}>*</Text>
+              </Text>
+              <TextInput
+                placeholder="Mobile"
+                keyboardType="number-pad"
+                maxLength={10}
+                onChangeText={(value) => {
+                  setPhone(value);
+                  if (validatePhone(value)) setMobileError("");
+                }}
+                style={styles.formInput}
+                placeholderTextColor={Colors.border_color}
+              />
+              {mobileError && (
+                <Text style={styles.errorText}>{mobileError}</Text>
+              )}
+            </View>
+            <View>
+              <Text style={styles.formTitle}>
+                GSTIN
+                <Text style={{ color: "red" }}>*</Text>
+              </Text>
+              <TextInput
+                placeholder="GSTIN"
+                onChangeText={(value) => {
+                  setGst(value);
+                  if (value) setGstInError("");
+                }}
+                style={styles.formInput}
+                placeholderTextColor={Colors.border_color}
+              />
+              {gstInError && <Text style={styles.errorText}>{gstInError}</Text>}
+            </View>
+            <View>
+              <Text style={styles.formTitle}>
+                Address
+                <Text style={{ color: "red" }}>*</Text>
+              </Text>
+              <TextInput
+                placeholder="Address"
+                onChangeText={(value) => {
+                  setAddress(value);
+                  if (value) setAddressError("");
+                }}
+                style={styles.formInput}
+                placeholderTextColor={Colors.border_color}
+              />
+              {addressError && (
+                <Text style={styles.errorText}>{addressError}</Text>
+              )}
+            </View>
+            <View>
+              <Text style={styles.formTitle}>
+                Pin Code
+                <Text style={{ color: "red" }}>*</Text>
+              </Text>
               <TextInput
                 placeholder="Pin Code"
-                placeholderTextColor={Colors.text_grey}
-                style={styles.textInput}
+                keyboardType="number-pad"
+                maxLength={6}
+                onChangeText={(value) => {
+                  setPincode(value);
+                  if (value) setPinCodeError("");
+                }}
+                style={styles.formInput}
+                placeholderTextColor={Colors.border_color}
               />
+              {pinCodeError && (
+                <Text style={styles.errorText}>{pinCodeError}</Text>
+              )}
             </View>
-            <View style={styles.view2}>
-              <TouchableOpacity style={styles.touch}>
-                <Text style={styles.checkoutText}>Shipping Coast</Text>
+            <View>
+              <Text style={styles.formTitle}>
+                Landmark
+                <Text style={{ color: "red" }}>*</Text>
+              </Text>
+              <TextInput
+                placeholder="Landmark"
+                onChangeText={(value) => {
+                  setLandmark(value);
+                  if (value) setLandmarkError("");
+                }}
+                style={styles.formInput}
+                placeholderTextColor={Colors.border_color}
+              />
+              {landMarkError && (
+                <Text style={styles.errorText}>{landMarkError}</Text>
+              )}
+            </View>
+            <View>
+              <Text style={styles.formTitle}>
+                Town/City
+                <Text style={{ color: "red" }}>*</Text>
+              </Text>
+              <TextInput
+                placeholder="Town/ City"
+                onChangeText={(value) => {
+                  setCity(value);
+                  if (value) setTownError(""); // Clear the error
+                }}
+                style={styles.formInput}
+                placeholderTextColor={Colors.border_color}
+              />
+              {townError && <Text style={styles.errorText}>{townError}</Text>}
+            </View>
+            <View>
+              <Text style={styles.formTitle}>
+                Email address
+                <Text style={{ color: "red" }}>*</Text>
+              </Text>
+              <TextInput
+                placeholder="Email Address"
+                autoCapitalize="none"
+                onChangeText={(value) => {
+                  setEmail(value);
+                  if (value) setEmailError(""); // Clear the error
+                }}
+                style={styles.formInput}
+                placeholderTextColor={Colors.border_color}
+              />
+              {emailError && <Text style={styles.errorText}>{emailError}</Text>}
+            </View>
+            <View>
+              <Text style={styles.formTitle}>
+                State
+                <Text style={{ color: "red" }}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={styles.stateHolder}
+                onPress={() => setShowStateDropdown(!showStateDropdown)}
+              >
+                <Text style={styles.text}>
+                  {selectedState || "Select State"}
+                </Text>
+                <View style={styles.iconHolder}>
+                  <AntDesign
+                    name="caretdown"
+                    size={20}
+                    color={Colors.border_color}
+                  />
+                </View>
               </TouchableOpacity>
+              {showStateDropdown && (
+                <View style={styles.dropdownContent}>
+                  <TextInput
+                    keyboardType="default"
+                    label={"Search*"}
+                    style={styles.formInput}
+                    placeholderTextColor={Colors.text_grey}
+                    onChangeText={handleSearchChange}
+                    value={searchStateText}
+                    placeholder="Search State"
+                  />
+                  {/* Use the filtered state list here */}
+                  {state.length > 0 ? (
+                    state.map((state, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.dropdownItem}
+                        onPress={() => handleStateSelection(state)}
+                      >
+                        <Text style={styles.text}>{state.name}</Text>
+                      </TouchableOpacity>
+                    ))
+                  ) : (
+                    <Text style={styles.text}>No states found</Text>
+                  )}
+                </View>
+              )}
+            </View>
+            {stateError && <Text style={styles.errorText}>{stateError}</Text>}
+          </View>
+          {/* Your order view section */}
+          <View style={styles.yourOrderView}>
+            <Text style={styles.yourOrderText}>Your Order</Text>
+
+            <View style={styles.lowerView}>
+              <Text style={styles.lowerText}>Product</Text>
+              <Text style={styles.lowerText}>Total</Text>
+            </View>
+            <View style={styles.divider} />
+            {cartProducts?.length &&
+              cartProducts?.map((item, index) => {
+                // console.log(item, "line 337");
+                return (
+                  <View style={styles.lowerView} key={index}>
+                    <View style={styles.cartImageHolder}>
+                      <FastImage
+                        style={styles.cartImage}
+                        source={{
+                          uri: item?.product?.images[0]?.image,
+                          priority: FastImage.priority.high,
+                          cache: FastImage.cacheControl.web,
+                        }}
+                        resizeMode={FastImage.resizeMode.cover}
+                      />
+                    </View>
+
+                    <View style={{ width: "60%" }}>
+                      <Text style={styles.itemName}>
+                        {item?.category === "6557deab301ec4f2f4266131"
+                          ? "Corrugated Box"
+                          : ""}
+                        {"\n"} {item?.product?.name} {item?.product?.slug}{" "}
+                        {"\n"}
+                        {item?.quantity} x {item?.price}
+                      </Text>
+                    </View>
+                    <View style={{ width: "15%" }}>
+                      <Text style={styles.priceText}>
+                        ₹{item.quantity * item.price}
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })}
+
+            <View style={styles.divider} />
+            <View style={styles.freightChargesHolder}>
+              <View style={{ width: "70%" }}>
+                <Text style={styles.freightChargesText}>Total GST Charges</Text>
+                <Text
+                  style={[styles.freightChargesText, { color: Colors.red }]}
+                >
+                  * 12% for corrugated-box and 18% for all other products
+                </Text>
+              </View>
+              <Text style={styles.priceText}>{totalGST.toFixed(2)}</Text>
+            </View>
+            <View style={styles.freightChargesHolder}>
+              <View style={{ width: "70%" }}>
+                <Text style={styles.freightChargesText}>Total Amount</Text>
+              </View>
+              <Text style={styles.priceText}>₹{getCartTotal() + totalGST}</Text>
             </View>
           </View>
-        </View>
-        {/* Summary */}
-        {/* Price Section */}
-      <View style={styles.locationHolder}>
-      <Text style={styles.text1}>Summary</Text>
-        <View style={styles.view}>
-          <Text style={styles.text}>Payment Method:</Text>
-          <Text style={styles.textValue}>Cash On Delivery</Text>
-        </View>
-        <View style={styles.view}>
-          <Text style={styles.text}>GST 18%:</Text>
-          <Text style={styles.textValue}>Rs. 5899.00</Text>
-        </View>
-        <View style={styles.view}>
-          <Text style={styles.text}>Delivery Fee :</Text>
-          <Text style={styles.textValue}>Rs.200.00</Text>
-        </View>
-        <View style={{borderWidth: 1, borderColor: Colors.text_grey}} />
-        <View style={styles.view}>
-          <Text style={styles.text}>Total Coast:</Text>
-          <Text style={styles.textValue}>Rs.5699.00</Text>
-        </View>
-      </View>
-      {/* Pay Now */}
-      <TouchableOpacity style={styles.buttonView} onPress={()=> navigation.navigate('Payment')}>
-        <Text style={styles.checkoutText}>Pay Now</Text>
-      </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
-  );
-};
 
-export default ChekoutScreen;
+          {/* Message View */}
+          {/* <View style={styles.messageView}>
+            <Text style={styles.messageText}>
+              Cash on delivery: Please contact us if you require {"\n"}{" "}
+              assistance or wish to make alternate arrangements.
+            </Text>
+          </View> */}
+          {/* Select Address Button */}
+          {loading ? (
+            <Loading size={20} color={Colors.forgetPassword} />
+          ) : (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => handleAddAddress()}
+              style={styles.addressButton}
+            >
+              <Text style={styles.addressText}>Select Address</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
-  main: {
+  container: {
     flex: 1,
+  },
+  main: {
     backgroundColor: Colors.white,
+  },
+  changeHolder: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   headerView: {
-    padding: responsivePadding(10),
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    paddingTop: moderateScaleVertical(20),
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginHorizontal: moderateScale(10),
+    marginBottom: moderateScaleVertical(10),
   },
-  headerText: {
-    color: Colors.black,
-    fontSize: responsiveFontSize(20),
-    fontWeight: '600',
-  },
-  locationHolder: {
-    borderWidth: responsivePadding(1),
-    borderColor: Colors.text_grey,
-    padding: responsivePadding(10),
-    borderRadius: responsivePadding(5),
-    width: '95%',
-    alignSelf: 'center',
+  content: {
+    marginTop: moderateScaleVertical(10),
     backgroundColor: Colors.white,
-    elevation: 3,
-    marginVertical: responsivePadding(10),
+    borderRadius: moderateScale(5),
+    marginHorizontal: moderateScale(10),
   },
-  locationView: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  billingHeading: {
+    color: Colors.forgetPassword,
+    fontSize: textScale(16),
+    fontFamily: FontFamily.Montserrat_SemiBold,
+    marginLeft: moderateScale(10),
+    marginVertical: moderateScaleVertical(10),
   },
-  text: {
-    color: Colors.black,
-    fontSize: responsiveFontSize(16),
-    fontWeight: '500',
+  formHolder: {
+    marginHorizontal: moderateScale(10),
+    marginTop: moderateScaleVertical(10),
+    gap: moderateScale(10),
   },
-  cartHolder: {
+  formTitle: {
+    color: Colors.forgetPassword,
+    fontFamily: FontFamily.Montserrat_SemiBold,
+    fontSize: textScale(15),
+  },
+  formInput: {
     borderWidth: 1,
-    marginVertical: 5,
-    padding: 10,
-    borderRadius: 5,
-    backgroundColor: Colors.white,
-    elevation: 5,
+    borderColor: Colors.border_color,
+    borderColor: Colors.border_color,
+    color: Colors.forgetPassword,
+    marginVertical: moderateScaleVertical(10),
+    padding: moderateScale(10),
+    borderRadius: moderateScale(5),
+    fontSize: textScale(16),
+    fontFamily: FontFamily.Montserrat_SemiBold,
   },
-  cartViewHolder: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  divider: {
+    borderWidth: moderateScale(0.5),
+    borderColor: Colors.border_color,
+    alignSelf: "center",
+    width: "100%",
   },
-  detailsviewHolder: {
-    width: '70%',
-    gap: 5,
+  yourOrderView: {
+    marginTop: moderateScaleVertical(10),
+    marginHorizontal: moderateScale(10),
   },
-  name: {
-    color: Colors.black,
-    fontSize: responsiveFontSize(16),
-    fontWeight: 'bold',
+  yourOrderText: {
+    color: Colors.forgetPassword,
+    fontFamily: FontFamily.Montserrat_SemiBold,
+    fontSize: textScale(20),
+    letterSpacing: scale(1),
   },
-  rating: {
-    color: Colors.text_grey,
-    fontSize: responsiveFontSize(15),
-    fontWeight: '500',
+  lowerView: {
+    flexDirection: "row",
+    gap: moderateScale(10),
+    alignItems: "center",
+    marginHorizontal: moderateScale(10),
+    marginVertical: moderateScaleVertical(10),
   },
-  price: {
-    color: Colors.black,
-    fontSize: responsiveFontSize(18),
-    fontWeight: 'bold',
+  lowerText: {
+    color: Colors.forgetPassword,
+    fontFamily: FontFamily.Montserrat_SemiBold,
+    fontSize: textScale(15),
+    marginBottom: moderateScale(10),
+  },
+  cartImage: {
+    width: "100%",
+    height: moderateScale(100),
+    borderRadius: moderateScale(5),
   },
   cartImageHolder: {
-    width: '35%',
-    alignItems: 'center',
+    width: "20%",
+    height: moderateScale(75),
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
   },
-  image: {
-    height: responsivePadding(120),
-    width: '80%',
-    borderRadius: 10,
+  freightChargesHolder: {
+    marginTop: moderateScaleVertical(10),
+    marginHorizontal: moderateScale(10),
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: moderateScaleVertical(20),
   },
-  priceHolder: {
-    borderWidth: 1,
-    borderColor: Colors.text_grey,
-    marginVertical: 10,
-    width: '95%',
-    alignSelf: 'center',
-    borderRadius: 10,
-    backgroundColor: Colors.white,
-    flex: 0.3,
+  freightChargesText: {
+    color: Colors.forgetPassword,
+    fontSize: textScale(16),
+    fontFamily: FontFamily.Montserrat_SemiBold,
   },
-  view: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 10,
+  messageView: {
+    width: "90%",
+    alignSelf: "center",
+    borderWidth: moderateScale(1),
+    padding: moderateScale(5),
+    justifyContent: "center",
+    alignItems: "center",
+    borderColor: Colors.border_color,
+    backgroundColor: Colors.backGroundMessage,
+    marginBottom: moderateScaleVertical(19),
+    borderRadius: moderateScale(5),
+  },
+  messageText: {
+    color: Colors.messageText,
+    fontSize: textScale(11),
+    fontFamily: FontFamily.Montserrat_Regular,
+    textAlign: "center",
+    lineHeight: scale(15),
+  },
+  addressButton: {
+    backgroundColor: Colors.forgetPassword,
+    justifyContent: "center",
+    alignItems: "center",
+    height: moderateScale(40),
+    width: moderateScale(300),
+    alignSelf: "center",
+    borderRadius: moderateScale(5),
+    marginBottom: moderateScale(25),
+  },
+  addressText: {
+    color: Colors.white,
+    fontSize: textScale(14),
+    fontFamily: FontFamily.Montserrat_SemiBold,
+  },
+  changeText: {
+    color: Colors.blue,
+    fontSize: textScale(18),
+    fontFamily: FontFamily.Montserrat_SemiBold,
+    textDecorationLine: "underline",
+  },
+  itemName: {
+    color: Colors.black,
+    textTransform: "uppercase",
+    fontSize: textScale(12),
+    fontFamily: FontFamily.Montserrat_Regular,
+  },
+  priceText: {
+    color: Colors.black,
+    fontFamily: FontFamily.Montserrat_SemiBold,
+    fontSize: textScale(14),
+    textAlign: "right",
+  },
+  errorText: {
+    fontSize: textScale(14),
+    fontFamily: FontFamily.Montserrat_Regular,
+    color: Colors.red,
   },
   text: {
-    fontSize: responsiveFontSize(18),
-    fontWeight: '600',
-    color: Colors.text_grey,
+    color: Colors.border_color,
+    fontSize: textScale(16),
+    fontFamily: FontFamily.Montserrat_SemiBold,
+    padding: moderateScale(10),
+    width: "80%",
   },
-  textValue: {
-    color: Colors.black,
-    fontSize: responsiveFontSize(18),
-    marginHorizontal: 10,
-    fontWeight: '600',
-  },
-  buttonView: {
-    borderWidth: responsivePadding(2),
-    width: '90%',
-    marginVertical: responsivePadding(20),
-    alignSelf: 'center',
-    height: responsivePadding(48),
-    borderRadius: responsivePadding(5),
-    borderColor: Colors.forgetPassword,
-    backgroundColor: Colors.forgetPassword,
-    justifyContent: 'center',
-    alignItems: 'center',
-    
-  },
-  checkoutText: {
-    color: Colors.white,
-    fontWeight: '500',
-    fontSize: responsiveFontSize(18),
-  },
-  text1: {
-    color: Colors.forgetPassword,
-    fontSize: responsiveFontSize(18),
-    fontWeight: 'bold',
-  },
-  view1: {
-    marginVertical: 10,
-    flexDirection: 'row',
-    gap: 20,
-    alignItems: 'center',
-  },
-  textInput: {
+  stateHolder: {
     borderWidth: 1,
-    borderRadius: 10,
-    color: Colors.black,
-    borderColor: Colors.text_grey,
-    paddingHorizontal: 10,
+    flexDirection: "row",
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: moderateScale(5),
+    borderColor: Colors.border_color,
+    marginTop: moderateScaleVertical(10),
   },
-  view2: {
-    borderWidth: 2,
-    width: '45%',
-    height: '100%',
-    backgroundColor: Colors.forgetPassword,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  touch: {
-    backgroundColor: Colors.forgetPassword,
-    alignItems: 'center',
-    marginVertical: 10,
+  iconHolder: {
+    width: "20%",
+    padding: moderateScale(10),
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
   },
 });

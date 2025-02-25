@@ -1,198 +1,248 @@
 import {
-  Image,
-  SafeAreaView,
-  StatusBar,
   StyleSheet,
-  View,
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-  TouchableOpacity,
+  View,
   Text,
+  Platform,
+  SafeAreaView,
+  KeyboardAvoidingView,
+  StatusBar,
+  TouchableOpacity,
   ScrollView,
-} from 'react-native';
-import React,{useState,useEffect} from 'react';
-import Colors from '../../../components/Colors';
+  ImageBackground,
+  Alert,
+} from "react-native";
+import React, { useEffect, useState } from "react";
+import { useNavigation } from "@react-navigation/native";
+import Colors from "../../../components/Colors";
+import Feather from "react-native-vector-icons/Feather";
+import { LockClosedIcon } from "react-native-heroicons/outline";
+import Loading from "../../../components/General/loading";
+import { CHANGE_PASSWORD } from "../../../API/API_service";
 import {
-  responsiveFontSize,
-  responsivePadding,
-} from '../../../components/Responsive';
-import {useNavigation} from '@react-navigation/native';
-import AuthScreenTitle from '../../../components/AuthScreenTitle';
-import Toast from 'react-native-toast-message';
+  moderateScale,
+  moderateScaleVertical,
+  textScale,
+} from "../../../utils/ResponsiveSize";
+import FontFamily from "../../../utils/FontFamily";
+import { ImagePath } from "../../../utils/ImagePath";
 
-const UpdatePassword = () => {
+const UpdatePassword = (props) => {
   const navigation = useNavigation();
-//   const {email} = route.params;
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const showToast = ({type, text1, text2}) => {
-    Toast.show({
-      type: type,
-      text1: text1,
-      text2: text2,
-      visibilityTime: 5000,
-      autoHide: true,
-      topOffset: 30,
-    });
-  };
-  const handleSubmit2 =async () => {
-navigation.navigate('Login')
-  }
-  const handleSubmit = async () => {
-    try {
-      if (newPassword.trim() === '' && confirmPassword.trim() === '') {
-        showToast({
-          type: 'error',
-          text1: 'Missing fields',
-          text2: 'New and confirm Password required',
-        });
-        return;
-      }
-      if(newPassword.trim() ===''){
-        showToast({
-          type: 'error',
-          text1: 'Missing field',
-          text2: 'Please fill new password',
-        });
-        return;
-      }
-      if(confirmPassword.trim() ===''){
-        showToast({
-          type: 'error',
-          text1: 'Missing field',
-          text2: 'Please fill confirm password',
-        });
-        return;
-      }
+  const { email } = props.route.params;
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordError, setNewPasswordError] = useState(null);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errorText, setErrorText] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-      if (newPassword !== confirmPassword) {
-        showToast({
-          type: 'error',
-          text1: 'Password Mismatch',
-          text2: 'New and Confirm password do not match.',
-        });
-        return;
-      }
-      const formData = {
+  useEffect(() => {
+    if (newPassword.length > 0) {
+      setErrorText("");
+      setNewPasswordError("");
+    }
+    if (confirmPassword.length > 0) {
+      setErrorText("");
+      setConfirmPasswordError("");
+    }
+  }, [newPassword, confirmPassword]);
+  const handleSubmit = async () => {
+    if (newPassword.trim() === "" || confirmPassword.trim() === "") {
+      // setErrorText("Passwords,Please fill the passwords!");
+      setNewPasswordError("Please enter the new password!!");
+      setConfirmPasswordError("Please enter the confirm password!!");
+      return;
+    }
+
+    if (newPassword.length < 8 || confirmPassword.length < 8) {
+      setErrorText("Password must be 8 characters long!!!");
+      return;
+    } else if (newPassword !== confirmPassword) {
+      setErrorText("Both passwords must be same!!");
+      return;
+    } else {
+      setIsLoading(true);
+      let payload = {
         email_address: email,
         new_password: newPassword,
         confirm_password: confirmPassword,
       };
-      const response = await resetPassword(formData);
-      if (response.success) {
-        showToast({
-          type: 'success',
-          text1: 'Success',
-          text2: response.message || 'Password reset successfully',
-        });
-        Alert.alert('Success', 'Password change sucessfully');
-        navigation.navigate('Login');
-      } else {
-        showToast({
-          type: 'error',
-          text1: 'Failed',
-          text2:
-            response.message || 'Failed to reset password. Please try again.',
-        });
+      console.log(payload);
+      try {
+        const response = await CHANGE_PASSWORD(payload);
+        console.log(response, "Line 74");
+
+        setIsLoading(false);
+        if (response && response?.message === "Password updated successfully") {
+          navigation.replace("SuccessScreen", { come: "forgetPassword" });
+          // Alert.alert(
+          //   "Success",
+          //   "Your Password has been changed successfully",
+          //   [{ text: "OK", onPress: () => navigation.navigate("SuccessScreen") }]
+          // );
+        }
+      } catch (e) {
+        console.log(e);
       }
-    } catch (error) {
-      showToast({
-        type: 'error',
-        text1: 'Error',
-        text2: 'An unexpected error occurred. Please try again later.',
-      });
     }
   };
 
   return (
-    <SafeAreaView style={styles.main}>
-      <StatusBar barStyle={'dark-content'} backgroundColor={Colors.white} />
-      <ScrollView>
-        <StatusBar backgroundColor={Colors.white} />
-        <SafeAreaView />
-        <View style={{alignSelf:'center',marginTop:20}}>
-        <Image
-          source={require('../../../assets/image/splash.png')}
-          style={styles.imageStyle}
-          resizeMode="contain"
-        />
-         </View>
-        <AuthScreenTitle
-          title="Update Password"
-          subTitle="Don't Worry we will help you out!"
-        />
-        <View style={{width: '95%', alignSelf: 'center'}}>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.inputStyle}
-              keyboardType="default"
-              onChangeText={text => setNewPassword(text)}
-              placeholder="New password"
-              placeholderTextColor={Colors.text_grey}
-            />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <SafeAreaView style={{ backgroundColor: Colors.forgetPassword }} />
+      <StatusBar
+        barStyle={"light-content"}
+        backgroundColor={Colors.forgetPassword}
+      />
+      <View style={{ width: "100%", backgroundColor: Colors.forgetPassword }}>
+        <Text style={styles.loginText}>Set a New Password</Text>
+      </View>
+      <View style={{ flex: 1, backgroundColor: Colors.forgetPassword }}>
+        <ImageBackground
+          style={styles.bgImage}
+          source={ImagePath.loginBg}
+          resizeMode="stretch"
+        >
+          <View style={styles.v1}>
+            <ScrollView>
+              <View style={styles.contentContainer}>
+                <Text style={styles.inputText}>New Password</Text>
+                <View style={styles.inputBox}>
+                  <LockClosedIcon
+                    size={textScale(25)}
+                    color={Colors.border_color}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter password"
+                    value={newPassword}
+                    onChangeText={(value) => setNewPassword(value)}
+                    placeholderTextColor={Colors.border_color}
+                    secureTextEntry={!showPassword}
+                  />
+                  <Feather
+                    onPress={() => setShowPassword(!showPassword)}
+                    name={showPassword ? "eye" : "eye-off"}
+                    size={textScale(20)}
+                    color={Colors.border_color}
+                  />
+                </View>
+                {newPasswordError && (
+                  <Text style={styles.errorText}>{newPasswordError}</Text>
+                )}
+                <Text style={styles.inputText}>Confirm Password</Text>
+
+                <View style={styles.inputBox}>
+                  <LockClosedIcon size={textScale(25)} color={"gray"} />
+                  <TextInput
+                    style={styles.input}
+                    value={confirmPassword}
+                    onChangeText={(value) => setConfirmPassword(value)}
+                    placeholder="Confirm Password"
+                    placeholderTextColor={Colors.border_color}
+                    secureTextEntry={!showConfirmPassword}
+                  />
+                  <Feather
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    name={showConfirmPassword ? "eye" : "eye-off"}
+                    size={textScale(20)}
+                    color={Colors.border_color}
+                  />
+                </View>
+                {confirmPasswordError && (
+                  <Text style={styles.errorText}>{confirmPasswordError}</Text>
+                )}
+
+                {isLoading ? (
+                  <Loading size={40} color={Colors.forgetPassword} />
+                ) : (
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => handleSubmit()}
+                    style={styles.button}
+                  >
+                    <Text style={styles.buttonText}>Save and Continue</Text>
+                  </TouchableOpacity>
+                )}
+                {errorText && <Text style={styles.errorText}>{errorText}</Text>}
+              </View>
+            </ScrollView>
           </View>
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.inputStyle}
-              keyboardType="default"
-              onChangeText={text => setConfirmPassword(text)}
-              placeholder="Confirm password"
-              placeholderTextColor={Colors.text_grey}
-            />
-          </View>
-          <TouchableOpacity onPress={handleSubmit2} style={{width: '80%',marginVertical:20,borderWidth:2,padding:15,alignSelf:'center',borderRadius:10,backgroundColor:Colors.inactiveButton,borderColor:Colors.inactiveButton,alignItems:'center'}}>
-         <Text style={{fontSize:16,fontWeight:'600',color:Colors.white}}>Verify OTP</Text>
-        </TouchableOpacity>
-        </View>
-        <Toast />
-        </ScrollView>
-    </SafeAreaView>
+        </ImageBackground>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 
 export default UpdatePassword;
 
 const styles = StyleSheet.create({
-  main: {
+  loginText: {
+    marginTop: moderateScaleVertical(80),
+    alignSelf: "center",
+    fontSize: textScale(22),
+    fontFamily: FontFamily.Montserrat_ExtraBold,
+    color: Colors.white,
+  },
+  bgImage: {
     flex: 1,
-    backgroundColor: Colors.white,
+    width: "100%",
+    marginTop: moderateScaleVertical(10),
   },
-  container: {
+  contentContainer: {
+    marginHorizontal: moderateScale(30),
+    marginTop: moderateScaleVertical(80),
+  },
+  inputText: {
+    color: Colors.black,
+    fontSize: textScale(14),
+    fontFamily: FontFamily.Montserrat_Medium,
+  },
+  inputBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: moderateScale(10),
+    borderWidth: 1,
+    borderColor: Colors.border_color,
+    borderRadius: moderateScale(10),
+    marginVertical: moderateScaleVertical(10),
+  },
+  input: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.white,
-  },
-  imageStyle: {
-    height: responsivePadding(200),
-    width: responsivePadding(200),
-  },
-  resendButtonText: {
+    marginLeft: moderateScale(10),
+    fontSize: textScale(16),
     color: Colors.black,
-    textAlign: 'center',
-    fontSize: responsiveFontSize(16),
+    padding: moderateScale(10),
+    fontFamily: FontFamily.Montserrat_Medium,
   },
-  inputContainer: {
-    marginVertical: responsivePadding(10),
-    marginHorizontal: responsivePadding(20),
+  button: {
+    backgroundColor: Colors.forgetPassword,
+    justifyContent: "center",
+    alignItems: "center",
+    height: moderateScale(50),
+    borderRadius: moderateScale(10),
+    marginTop: moderateScaleVertical(30),
   },
-  inputStyle: {
-    letterSpacing: 0.7,
-    backgroundColor: Colors.backGround_grey,
-    padding:
-      Platform.OS === 'ios' ? responsivePadding(20) : responsivePadding(15),
-    borderRadius: responsivePadding(10),
-    borderWidth: responsivePadding(1.5),
-    borderColor: Colors.border_grey,
-    fontWeight: '500',
-    color: Colors.black,
+  buttonText: {
+    fontSize: textScale(16),
+    color: Colors.white,
+    fontFamily: FontFamily.Montserrat_SemiBold,
   },
-  otpText: {
-    fontSize: 19,
-    fontWeight: '600',
-    textAlign: 'center',
-    color: Colors.black,
+  errorText: {
+    fontSize: textScale(14),
+    fontFamily: FontFamily.Montserrat_Regular,
+    color: Colors.red,
+    marginVertical: moderateScaleVertical(10),
+  },
+  v1: {
+    flex: 1,
+    overflow: "hidden",
+    paddingTop: moderateScaleVertical(40),
   },
 });

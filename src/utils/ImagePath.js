@@ -1,0 +1,23 @@
+export const ImagePath = {
+  landing: require("../assets/image/sp_logo.png"),
+  splashLower: require("../assets/image/splashLower.png"),
+  headerImage: require("../assets/image/headerImage.png"),
+  user: require("../assets/image/user.png"),
+  defaultUserImage: require("../assets/image/defaultUser.png"),
+  loginBg: require("../assets/image/loginbg.png"),
+  smsImage:require("../assets/image/sms.png"),
+  account:require("../assets/image/account.png"),
+  password:require("../assets/image/password.png"),
+  corrugatedBox:require("../assets/image/corugatedBox.jpg"),
+  Label:require("../assets/image/label.jpg"),
+  paperBag:require("../assets/image/paperBag.jpg"),
+  polyBag:require("../assets/image/polyBag.png"),
+  boppTape:require("../assets/image/boppTape.jpg"),
+  PaperTape:require("../assets/image/paperTape.jpeg"),
+  SpecialityTape:require("../assets/image/specialityTape.jpg"),
+  delivery:require("../assets/image/delivery.png"),
+  secure:require("../assets/image/secure.png"),
+  noReturn:require("../assets/image/noReturn.png"),
+  recycle:require("../assets/image/recycle.png"),
+
+};

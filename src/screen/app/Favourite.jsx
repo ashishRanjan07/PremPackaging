@@ -1,142 +1,178 @@
-import {
-  Image,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  Dimensions,
-  View,
-  FlatList,
-} from 'react-native';
-import React from 'react';
-import Colors from '../../components/Colors';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Image, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React from "react";
+import { ArrowLeftIcon } from "react-native-heroicons/outline";
+import { useNavigation } from "@react-navigation/native";
+import { HeartIcon } from "react-native-heroicons/solid";
+import Colors from "../../components/Colors";
 import {
   responsiveFontSize,
   responsivePadding,
-} from '../../components/Responsive';
-import Data from '../../assets/dummyjson/topProduct.json';
-import { useNavigation } from '@react-navigation/core';
-const Favourite = () => {
-  const navigation = useNavigation();
-  const staticImageURL = 'https://picsum.photos/300';
-  const deviceWidth = Dimensions.get('window').width;
-  const productsPerRow = deviceWidth < 600 ? 2 : 4;
-  const containerWidth = (deviceWidth - responsivePadding(30)) / productsPerRow;
+} from "../../components/Responsive";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-  const renderItem = ({item}) => {
-    return (
-      <TouchableOpacity onPress={() => navigation.navigate('ProductDetilas',{item:item})}
-        key={item.id}
-        style={[styles.productContainer, {width: containerWidth}]}>
-        <Image source={{uri: staticImageURL}} style={styles.productImage} />
-        <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productPrice}>Price: ${item.price}</Text>
-        <Text style={styles.productRating}>Rating: {item.rating}</Text>
-      </TouchableOpacity>
-    );
-  };
+const Favorite = ({ showWishlist, setShowWishlist }) => {
+  const staticImageURL = "https://picsum.photos/300";
+  const navigation = useNavigation();
+
   return (
-    <SafeAreaView style={styles.main}>
-      <StatusBar barStyle={'dark-content'} backgroundColor={Colors.white} />
-      {/* Header View */}
-      <View style={styles.headerView}>
-        <TouchableOpacity>
-          <Ionicons
-            name="menu"
-            size={responsiveFontSize(35)}
-            color={Colors.black}
-          />
-        </TouchableOpacity>
-        <View>
-          <Image
-            source={require('../../assets/image/splash.png')}
-            style={{
-              height: responsivePadding(50),
-              width: responsivePadding(100),
-            }}
-          />
+    <View style={styles.main}>
+      <SafeAreaView style={{backgroundColor:Colors.white}}/>
+      <StatusBar backgroundColor={Colors.white} barStyle={"dark-content"}/>
+      <View style={{ backgroundColor: "white" }}>
+        <View style={styles.headerView}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <ArrowLeftIcon
+              size={responsivePadding(20)}
+              color={Colors.forgetPassword}
+            />
+          </TouchableOpacity>
+
+          <Text style={styles.headerTitle}>Wishlist</Text>
+          <Text></Text>
         </View>
-        <TouchableOpacity>
-          <Ionicons
-            name="search"
-            size={responsiveFontSize(35)}
-            color={Colors.black}
-          />
-        </TouchableOpacity>
       </View>
-      {/* Favourites Product Listed Below  */}
-      <View style={{alignSelf: 'center', flex: 1}}>
-        <FlatList
-          data={Data.top_products}
-          renderItem={renderItem}
-          keyExtractor={item => item.id}
-          numColumns={'2'}
-        />
+
+      {/* content */}
+
+      <View style={styles.card}>
+        <View style={styles.cartImageHolder}>
+          <Image source={{ uri: staticImageURL }} style={styles.cartImage} />
+        </View>
+        <View style={{ width: 150, marginTop: 10 }}>
+          <Text
+            style={[
+              styles.orderTitle,
+              { color: Colors.forgetPassword, fontWeight: "600" },
+            ]}
+          >
+            3 Ply Corrugated Box{" "}
+          </Text>
+          <Text style={styles.orderTitle}>8X8 inches(10 pcs)</Text>
+        </View>
+        <View>
+          <View style={{ marginLeft: 20 }}>
+            <HeartIcon size={responsivePadding(20)} color={"red"} />
+          </View>
+          <Text
+            style={{
+              color: "black",
+              marginRight: 20,
+              fontWeight: "600",
+              fontSize: responsiveFontSize(16),
+            }}
+          >
+            ₹ {2000}
+          </Text>
+        </View>
       </View>
-    </SafeAreaView>
+
+      <View style={styles.card}>
+        <View style={styles.cartImageHolder}>
+          <Image source={{ uri: staticImageURL }} style={styles.cartImage} />
+        </View>
+        <View style={{ width: 150, marginTop: 10 }}>
+          <Text
+            style={[
+              styles.orderTitle,
+              { color: Colors.forgetPassword, fontWeight: "600" },
+            ]}
+          >
+            3 Ply Corrugated Box{" "}
+          </Text>
+          <Text style={styles.orderTitle}>8X8 inches(10 pcs)</Text>
+        </View>
+        <View>
+          <View style={{ marginLeft: 20 }}>
+            <HeartIcon size={responsivePadding(20)} color={"red"} />
+          </View>
+          <Text
+            style={{
+              color: "black",
+              marginRight: 20,
+              fontWeight: "600",
+              fontSize: responsiveFontSize(16),
+            }}
+          >
+            ₹ {2000}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <View style={styles.cartImageHolder}>
+          <Image source={{ uri: staticImageURL }} style={styles.cartImage} />
+        </View>
+        <View style={{ width: 150, marginTop: 10 }}>
+          <Text
+            style={[
+              styles.orderTitle,
+              { color: Colors.forgetPassword, fontWeight: "600" },
+            ]}
+          >
+            3 Ply Corrugated Box{" "}
+          </Text>
+          <Text style={styles.orderTitle}>8X8 inches(10 pcs)</Text>
+        </View>
+        <View>
+          <View style={{ marginLeft: 20 }}>
+            <HeartIcon size={responsivePadding(20)} color={"red"} />
+          </View>
+          <Text
+            style={{
+              color: "black",
+              marginRight: 20,
+              fontWeight: "600",
+              fontSize: responsiveFontSize(16),
+            }}
+          >
+            ₹ {2000}
+          </Text>
+        </View>
+      </View>
+    </View>
   );
 };
 
-export default Favourite;
+export default Favorite;
 
 const styles = StyleSheet.create({
   main: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.back,
   },
   headerView: {
-    padding: responsivePadding(10),
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    marginHorizontal: responsivePadding(10),
+    paddingTop: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
   },
-  headerText: {
+  headerTitle: {
     color: Colors.black,
-    fontSize: responsiveFontSize(20),
-    fontWeight: '600',
+    fontSize: responsiveFontSize(18),
+    fontWeight: "400",
   },
-  scrollView: {
-    paddingHorizontal: responsivePadding(10),
-    borderWidth: 2,
+  card: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "white",
+    marginHorizontal: responsivePadding(10),
+    marginTop: 10,
+    elevation: 5,
+    borderRadius: 10,
   },
-  productContainer: {
-    borderWidth: responsivePadding(1),
-    width: responsivePadding(200), // Set the width of each product container
-    marginRight: responsivePadding(10),
-    borderRadius: responsivePadding(5),
-    overflow: 'hidden',
-    // height:'92%',
-    marginVertical: 10,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingBottom: responsivePadding(10),
-    borderColor: Colors.text_grey,
-    alignItems: 'center',
+  cartImage: {
+    width: responsivePadding(30),
+    height: responsivePadding(30),
   },
-  productImage: {
-    width: '100%',
-    height: responsivePadding(120), // Set an appropriate height for your images
-    resizeMode: 'cover',
-    borderRadius: responsivePadding(5),
+  cartImageHolder: {
+    padding: 20,
   },
-  productName: {
-    fontSize: responsiveFontSize(16),
-    fontWeight: 'bold',
-    marginVertical: responsivePadding(5),
-    paddingHorizontal: responsivePadding(5),
-    color: Colors.black,
-  },
-  productPrice: {
-    fontSize: responsiveFontSize(14),
-    color: Colors.forgetPassword,
-    paddingHorizontal: responsivePadding(5),
-  },
-  productRating: {
-    fontSize: responsiveFontSize(14),
-    color: Colors.text_grey,
-    paddingHorizontal: responsivePadding(5),
+  orderTitle: {
+    color: "black",
+    textTransform: "uppercase",
+    fontSize: responsiveFontSize(13),
   },
 });

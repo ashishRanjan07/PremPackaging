@@ -45,6 +45,7 @@ const SignUpForm = () => {
             <Text style={styles.labelText}>Phone number*</Text>
             <TextInput
               placeholder="1234567890"
+              keyboardType='number-pad'
               style={styles.inputbox}
               maxLength={10}
               placeholderTextColor={Colors.text_grey}
@@ -55,6 +56,7 @@ const SignUpForm = () => {
             <Text style={styles.labelText}>Email*</Text>
             <TextInput
               placeholder="john@gmail.com"
+              autoCapitalize='none'
               style={styles.inputbox}
               maxLength={10}
               placeholderTextColor={Colors.text_grey}

@@ -1,194 +1,349 @@
 import {
-  Image,
-  SafeAreaView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
   View,
+  Text,
+  StyleSheet,
+  StatusBar,
+  SafeAreaView,
+  ScrollView,
+  TouchableOpacity,
+  ImageBackground,
+  TextInput,
   KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
-import React, {useState} from 'react';
-import Colors from '../../components/Colors';
+} from "react-native";
+import React, { useEffect, useState } from "react";
+import Colors from "../../components/Colors";
+import { EnvelopeIcon, LockClosedIcon } from "react-native-heroicons/outline";
+import { useNavigation } from "@react-navigation/native";
+import Feather from "react-native-vector-icons/Feather";
+import Loading from "../../components/General/loading";
+import { LOGIN_USER } from "../../API/API_service";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Service from "../../API/Service";
 import {
-  responsiveFontSize,
-  responsivePadding,
-} from '../../components/Responsive';
-import Fontisto from 'react-native-vector-icons/Fontisto';
-import { useNavigation } from '@react-navigation/native';
+  moderateScale,
+  moderateScaleVertical,
+  textScale,
+} from "../../utils/ResponsiveSize";
+import FontFamily from "../../utils/FontFamily";
+import { ImagePath } from "../../utils/ImagePath";
 
-const Login = () => {
-  const navigation = useNavigation()
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export default function Login() {
+  const navigation = useNavigation();
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
+  const [password, setPassword] = useState("");
+  const [emailValidationText, setEmailValidationText] = useState("");
+  const [passwordValidationText, setPasswordValidationText] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showErrorText, setShowErrorText] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const onsubmit = async() => {
-    navigation.navigate('BottomNavigation')
-  }
+  useEffect(() => {
+    if (validateEmail(email)) {
+      setEmailError(false);
+      setEmailValidationText("");
+    }
+
+    if (password.length > 0) {
+      setPasswordError(false);
+      setPasswordValidationText("");
+    }
+
+    if (email.length > 0) {
+      if (!validateEmail(email)) {
+        setEmailError(true);
+        setEmailValidationText("Please enter a valid email!");
+        return;
+      } else if (email.length === 0) {
+        setEmailError(false);
+        setEmailValidationText("");
+        return;
+      } else if (email.length > 0) {
+        setErrorMessage("");
+      }
+    }
+  }, [email, password]);
+
+  const validateEmail = (email) => {
+    // const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?<!\.\.)$/;
+    return regex.test(email);
+  };
+
+  const handleEmojiForEmail = (value) => {
+    const emojiRegex =
+      /(?:[\u2700-\u27BF]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDE4F]|\uD83D[\uDE80-\uDEFF]|\uD83E[\uDD00-\uDDFF])/g;
+    const filteredText = value.replace(emojiRegex, "");
+    setEmail(filteredText);
+  };
+
+  const handleEmojiForPassword = (value) => {
+    const emojiRegex =
+      /(?:[\u2700-\u27BF]|\uD83C[\uDF00-\uDFFF]|\uD83D[\uDC00-\uDE4F]|\uD83D[\uDE80-\uDEFF]|\uD83E[\uDD00-\uDDFF])/g;
+    const filteredText = value.replace(emojiRegex, "");
+    setPassword(filteredText);
+  };
+
+  const handleLogin = async () => {
+    if (email.trim() === "") {
+      setEmailError(true);
+      setEmailValidationText("Please enter the Email!");
+    }
+    if (password.trim() === "") {
+      setPasswordError(true);
+      setPasswordValidationText("Please enter the Password!");
+      return;
+    } else if (!validateEmail(email)) {
+      setEmailError(true);
+      setEmailValidationText("Please enter a valid Email!");
+      return;
+    } else if (email.length > 0 && password.length > 0) {
+      setEmailError(false);
+      setPasswordError(false);
+    }
+
+    const loginUser = {
+      email_address: email,
+      password: password,
+    };
+
+    try {
+      setLoading(true);
+      const response = await LOGIN_USER(loginUser);
+      console.log("Server Response:", response?.data?.user);
+      if (response?.success) {
+        try {
+          await AsyncStorage.setItem(
+            "user_data",
+            JSON.stringify(response?.data?.user)
+          );
+          Service.userData = await response?.data?.user;
+        } catch (e) {
+          console.log("Error in Saving data:", e?.message);
+        }
+        navigation.replace("Drawer", { userData: response?.data?.user });
+        setEmail("");
+        setPassword("");
+      } else {
+        setShowErrorText(true);
+        setErrorMessage("Invalid Credentials!!");
+        setEmail("");
+        setPassword("");
+      }
+      setLoading(false);
+    } catch (e) {
+      console.log(e?.message);
+      setLoading(false);
+      setEmail("");
+      setPassword("");
+    }
+  };
   return (
-    <SafeAreaView style={styles.main}>
-      <StatusBar barStyle={'dark-content'} backgroundColor={Colors.white} />
+    <>
       <KeyboardAvoidingView
-        style={{flex: 1, width: '100%'}}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-        enabled>
-        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-          <View style={styles.imageHolder}>
-            <Image
-              source={require('../../assets/image/splash.png')}
-              style={styles.image}
-            />
-          </View>
-          {/* Login Input sections */}
-          <View style={{width: '95%'}}>
-            {/* Email/phone number */}
-            <View style={styles.inputHolder}>
-              <Text style={styles.label}>Email/phone number</Text>
-              <TextInput
-                placeholder="Enter email/phone number"
-                keyboardType="default"
-                style={styles.textInputBox}
-                placeholderTextColor={Colors.text_grey}
-                value={email}
-                onChangeText={text => setEmail(text)}
-              />
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <SafeAreaView style={{ backgroundColor: Colors.forgetPassword }} />
+        <StatusBar
+          barStyle={"light-content"}
+          backgroundColor={Colors.forgetPassword}
+        />
+        <View style={{ width: "100%", backgroundColor: Colors.forgetPassword }}>
+          <Text style={styles.loginText}>Welcome back!</Text>
+        </View>
+
+        <View style={{ flex: 1, backgroundColor: Colors.forgetPassword }}>
+          <ImageBackground
+            style={styles.bgImage}
+            source={ImagePath.loginBg}
+            resizeMode="stretch"
+          >
+            <View style={styles.v1}>
+              <ScrollView>
+                <View style={styles.contentContainer}>
+                  <Text style={styles.inputText}>Email</Text>
+
+                  <View style={styles.inputBox}>
+                    <EnvelopeIcon
+                      size={textScale(25)}
+                      color={Colors.border_color}
+                    />
+                    <TextInput
+                      style={styles.input}
+                      value={email}
+                      autoCapitalize={"none"}
+                      onChangeText={(value) => handleEmojiForEmail(value)}
+                      placeholder="Enter your Email"
+                      placeholderTextColor={Colors.border_color}
+                    />
+                  </View>
+
+                  {emailError && (
+                    <Text style={styles.errorText}>{emailValidationText}</Text>
+                  )}
+
+                  <Text style={styles.inputText}>Password</Text>
+
+                  <View style={styles.inputBox}>
+                    <LockClosedIcon
+                      size={textScale(25)}
+                      color={Colors.border_color}
+                    />
+                    <TextInput
+                      style={styles.input}
+                      autoCapitalize="none"
+                      placeholder="Enter Password"
+                      value={password}
+                      onChangeText={(value) => handleEmojiForPassword(value)}
+                      secureTextEntry={!showPassword}
+                      placeholderTextColor={Colors.border_color}
+                    />
+
+                    <Feather
+                      onPress={() => setShowPassword(!showPassword)}
+                      name={showPassword ? "eye" : "eye-off"}
+                      size={textScale(20)}
+                      color={Colors.border_color}
+                    />
+                  </View>
+
+                  {passwordError && (
+                    <Text style={styles.errorText}>
+                      {passwordValidationText}
+                    </Text>
+                  )}
+
+                  <Text
+                    onPress={() => navigation.navigate("forgetPassword")}
+                    style={styles.forgotPasswordText}
+                  >
+                    Forgot Password ?
+                  </Text>
+
+                  {loading ? (
+                    <Loading
+                      size={textScale(40)}
+                      color={Colors.forgetPassword}
+                    />
+                  ) : (
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      onPress={() => handleLogin()}
+                      style={styles.button}
+                    >
+                      <Text style={styles.buttonText}>Log In</Text>
+                    </TouchableOpacity>
+                  )}
+
+                  <View style={styles.lowerSignUpHolder}>
+                    <Text style={styles.forgotPasswordText}>New User? </Text>
+                    <Text
+                      onPress={() => navigation.navigate("SignUp")}
+                      style={styles.signUpText}
+                    >
+                      Sign Up
+                    </Text>
+                  </View>
+
+                  {showErrorText && (
+                    <View style={[styles.errorHolder, { marginTop: 10 }]}>
+                      <Text style={styles.errorText}>{errorMessage}</Text>
+                    </View>
+                  )}
+                </View>
+              </ScrollView>
             </View>
-            {/* password */}
-            <View style={styles.inputHolder}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                placeholder="Enter password"
-                keyboardType="default"
-                style={styles.textInputBox}
-                placeholderTextColor={Colors.text_grey}
-                value={password}
-                onChangeText={text => setPassword(text)}
-              />
-            </View>
-            {/* Remember me and forget password sections */}
-            <View style={styles.rememberView}>
-              <TouchableOpacity style={styles.rememberTouchView}>
-                <Fontisto
-                  name="checkbox-passive"
-                  size={responsiveFontSize(16)}
-                  color={Colors.text_grey}
-                />
-                <Text style={styles.text}>Remember me</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigation.navigate('forgetpassword')}>
-                <Text style={styles.text2}>Forget Password?</Text>
-                <View style={styles.underline} />
-              </TouchableOpacity>
-            </View>
-            {/* Button View */}
-            <TouchableOpacity style={styles.buttonView} onPress={onsubmit}>
-              <Text
-                style={{
-                  color: Colors.white,
-                  fontWeight: '500',
-                  fontSize: responsiveFontSize(18),
-                }}>
-                Sign in
-              </Text>
-            </TouchableOpacity>
-          </View>
-          {/* Don't have an account? */}
+          </ImageBackground>
         </View>
       </KeyboardAvoidingView>
-      <View style={styles.accountHolder}>
-      <Text style={styles.label}>Don't have an account?{" "}</Text>
-      <TouchableOpacity onPress={() => navigation.navigate('Sign')}>
-        <Text style={[styles.text2, { fontSize: responsiveFontSize(16) }]}>
-          Sign Up here
-        </Text>
-        <View style={styles.underline} />
-      </TouchableOpacity>
-    </View>
-    </SafeAreaView>
+    </>
   );
-};
-
-export default Login;
+}
 
 const styles = StyleSheet.create({
-  main: {
+  container: {
     flex: 1,
-    backgroundColor: Colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: Colors.forgetPassword,
   },
-  imageHolder: {
-    marginVertical: responsivePadding(46),
+  loginText: {
+    marginTop: moderateScaleVertical(80),
+    alignSelf: "center",
+    fontSize: textScale(22),
+    fontFamily: FontFamily.Montserrat_ExtraBold,
+    color: Colors.white,
   },
-  image: {
-    height: responsivePadding(110),
-    width: responsivePadding(201),
+  bgImage: {
+    flex: 1,
+    width: "100%",
+    marginTop: moderateScaleVertical(10),
   },
-  label: {
-    color: Colors.text_grey,
-    fontWeight: '600',
-    fontSize: responsiveFontSize(16),
+  contentContainer: {
+    marginHorizontal: moderateScale(30),
+    marginTop: moderateScaleVertical(80),
   },
-  textInputBox: {
+  inputText: {
+    color: Colors.black,
+    fontSize: textScale(14),
+    fontFamily: FontFamily.Montserrat_Medium,
+  },
+  inputBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: moderateScale(10),
     borderWidth: 1,
-    borderColor: Colors.border_color,
-    borderRadius: responsivePadding(5),
-    padding: responsivePadding(10),
-    fontSize: responsiveFontSize(16),
-    fontWeight: '600',
+    borderColor: "gray",
+    borderRadius: moderateScale(10),
+    marginVertical: moderateScaleVertical(10),
   },
-  inputHolder: {
-    padding: responsivePadding(10),
-    gap: 5,
+  input: {
+    flex: 1,
+    marginLeft: moderateScale(10),
+    fontSize: textScale(16),
+    color: Colors.black,
+    padding: moderateScale(10),
   },
-  text2: {
+  forgotPasswordText: {
+    alignSelf: "flex-end",
+    color: Colors.black,
+    fontSize: textScale(14),
+    fontFamily: FontFamily.Montserrat_Medium,
+  },
+  button: {
+    backgroundColor: Colors.forgetPassword,
+    justifyContent: "center",
+    alignItems: "center",
+    height: moderateScale(50),
+    borderRadius: moderateScale(10),
+    marginTop: moderateScaleVertical(30),
+  },
+  buttonText: {
+    fontSize: textScale(16),
+    color: Colors.white,
+    fontFamily: FontFamily.Montserrat_Medium,
+  },
+  errorText: {
+    fontSize: textScale(14),
+    fontFamily: FontFamily.Montserrat_Regular,
+    color: Colors.red,
+  },
+  v1: {
+    flex: 1,
+    overflow: "hidden",
+    paddingTop: moderateScaleVertical(40),
+  },
+  lowerSignUpHolder: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: moderateScaleVertical(20),
+    alignItems: "center",
+  },
+  signUpText: {
     color: Colors.forgetPassword,
-    fontSize: responsiveFontSize(18),
-    fontWeight: '600',
-  },
-  text: {
-    color: Colors.text_grey,
-    fontSize: responsiveFontSize(18),
-    fontWeight: '600',
-  },
-  rememberView: {
-    width: '90%',
-    alignSelf: 'center',
-    marginTop: responsivePadding(10),
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  rememberTouchView: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  buttonView: {
-    borderWidth: responsivePadding(2),
-    marginVertical: responsivePadding(20),
-    width: responsivePadding(343),
-    alignSelf: 'center',
-    height: responsivePadding(48),
-    borderRadius: responsivePadding(5),
-    borderColor: Colors.forgetPassword,
-    backgroundColor: Colors.forgetPassword,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  underline: {
-    borderWidth: responsivePadding(1),
-    borderColor: Colors.forgetPassword,
-    backgroundColor: Colors.forgetPassword,
-  },
-  accountHolder: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding:responsivePadding(20),
+    fontSize: textScale(14),
+    textDecorationLine: "underline",
+    fontFamily: FontFamily.Montserrat_Medium,
   },
 });

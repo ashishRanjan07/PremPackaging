@@ -2,8 +2,8 @@
     "top_products": [
       {
         "id": 1,
-        "name": "Smartphone X",
-        "brand": "TechCo",
+        "name": "Corrugated Boxes aluminium foils",
+        "brand": "TechCo", 
         "price": 799.99,
         "discount_percentage": 10,
         "rating": 4.5,
@@ -12,7 +12,7 @@
       },
       {
         "id": 2,
-        "name": "Laptop Pro",
+        "name": "Offset Printed Cartons 1X2 carton size",
         "brand": "Gizmo",
         "price": 1299.99,
         "discount_percentage": 15,
@@ -22,7 +22,7 @@
       },
       {
         "id": 3,
-        "name": "Ultra HD Smart TV",
+        "name": "Bluetooth Headsets Cancelling Noise",
         "brand": "Visionary",
         "price": 899.99,
         "discount_percentage": 12,
@@ -32,7 +32,7 @@
       },
       {
         "id": 4,
-        "name": "Wireless Noise-Canceling Headphones",
+        "name": "Wireless Headphones with 5G technology",
         "brand": "SoundMaster",
         "price": 199.99,
         "discount_percentage": 8,
@@ -82,7 +82,7 @@
       },
       {
         "id": 9,
-        "name": "Luxury Leather Bag",
+        "name": "Luxury Leather Bag 15X20 size",
         "brand": "FashionElite",
         "price": 499.99,
         "discount_percentage": 10,

@@ -1,0 +1,54 @@
+[
+  {
+    "id": 1,
+    "name": "Corrugated Box",
+    "category_id": "6557deab301ec4f2f4266131"
+  },
+  {
+    "id": 2,
+    "name": "Label",
+    "subMenu": [
+      {
+        "id": 1,
+        "name": "DIRECT THERMAL LABEL",
+        "category_id": "6557e1cb301ec4f2f426614c"
+      },
+      {
+        "id": 2,
+        "name": "CHROMO LABEL",
+        "category_id": "6557e236301ec4f2f4266154"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Paper Bag",
+    "category_id": "6557df46301ec4f2f4266139"
+  },
+  {
+    "id": 4,
+    "name": "Poly Bag",
+    "category_id": "6557df4f301ec4f2f426613d"
+  },
+  {
+    "id": 5,
+    "name": "Tape",
+    "subMenu": [
+      {
+        "id": 5,
+        "name": "Bopp Tape",
+        "category_id": "6557df64301ec4f2f4266141"
+      },
+      {
+        "id": 6,
+        "name": "Paper Tape",
+        "category_id": "6557df71301ec4f2f4266145"
+      },
+      {
+        "id": 7,
+        "name": "Speciality Tape",
+        "category_id": "6642e8f665f20fe41ab417bc"
+      }
+    ]
+  }
+]
